@@ -91,8 +91,9 @@ async function startLogin(a) {
   $('#loginModalHint').textContent = '正在打开浏览器窗口登录，登录成功后会自动抓取 token 并关闭窗口。';
   $('#grabNowBtn').classList.remove('hidden');
   loggingInAdapterId = a.id;
+  let r;
   try {
-    const r = await window.api.startLogin(a.id);
+    r = await window.api.startLogin(a.id);
     if (r.keepOpen) {
       $('#loginModalHint').textContent = r.message || '请在弹出的窗口内完成登录；若站点需要验证码对话，请在窗口内发一条消息完成验证，然后点击下方按钮确认抓取。';
       return;
