@@ -34,8 +34,12 @@ class LocalServer {
   }
 
   stop() {
-    if (this.server) this.server.close();
+    const s = this.server;
     this.server = null;
+    return new Promise((resolve) => {
+      if (s) s.close(() => resolve());
+      else resolve();
+    });
   }
 
   setCors(res) {
@@ -223,6 +227,7 @@ class LocalServer {
     let content = '';
     const lines = raw.split(/\r?\n/);
     for (const line of lines) {
+      if (typeof adapter.parseChunk !== 'function') break;
       const r = adapter.parseChunk(line, model);
       if (!r) continue;
       if (r.done) break;
@@ -251,6 +256,7 @@ class LocalServer {
     let first = true;
     let status = 0;
     const errChunks = [];
+    let sseBuffer = '';
 
     res.on('close', () => {
       aborted = true;
@@ -270,7 +276,12 @@ class LocalServer {
           errChunks.push(chunk);
           if (aborted) return;
           const text = chunk.toString('utf8');
-          const events = parseSSEEventData(text);
+          sseBuffer += text;
+          const parts = sseBuffer.split(/\r?\n\r?\n/);
+          const complete = parts.slice(0, -1).join('\n\n');
+          sseBuffer = parts[parts.length - 1];
+          if (!complete) return;
+          const events = parseSSEEventData(complete + '\n\n');
           for (const ev of events) {
             if (ev.data === '[DONE]') {
               finished = true;
@@ -296,6 +307,33 @@ class LocalServer {
         signal
       ).then((meta) => {
         if (meta && meta.statusCode) status = meta.statusCode;
+        if (!finished && !aborted && sseBuffer.trim()) {
+          const events = parseSSEEventData(sseBuffer);
+          for (const ev of events) {
+            if (ev.data === '[DONE]') {
+              finished = true;
+              writer.send(null, openaiDone());
+              writer.close();
+              sseBuffer = '';
+              return;
+            }
+            const r = adapter.parseChunk(`data: ${ev.data}`, model);
+            if (!r) continue;
+            if (r.done) {
+              finished = true;
+              writer.send(null, openaiDone());
+              writer.close();
+              sseBuffer = '';
+              return;
+            }
+            if (first && r.choices && r.choices[0]) {
+              r.choices[0].delta.role = 'assistant';
+              first = false;
+            }
+            writer.send(null, r);
+          }
+          sseBuffer = '';
+        }
         if (status >= 400 && !finished) {
           const errText = Buffer.concat(errChunks).toString('utf8').slice(0, 300);
           writer.send(null, openaiChunk({ model, delta: { content: `[上游错误 ${status}] ${errText}` }, finish: 'stop' }));

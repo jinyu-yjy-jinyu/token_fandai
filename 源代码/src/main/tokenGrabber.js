@@ -188,7 +188,7 @@ class TokenGrabber {
         }
       } catch (e) {}
       try {
-        await this.ses.clearStorageData({ origin: adapter.cookieUrl, storages: ['localstorage', 'sessionstorage'] });
+        await this.ses.clearStorageData({ origin: new URL(adapter.cookieUrl).origin, storages: ['localstorage', 'sessionstorage'] });
       } catch (e) {}
     } catch (e) {}
   }

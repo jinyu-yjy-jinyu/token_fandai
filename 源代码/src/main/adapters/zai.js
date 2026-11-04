@@ -9,7 +9,8 @@ function isGuestToken(token) {
   try {
     const parts = String(token).split('.');
     if (parts.length < 2) return true;
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+    const b64 = String(parts[1]).replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(Buffer.from(b64, 'base64').toString('utf8'));
     const email = payload.email || '';
     if (email.startsWith('guest')) return true;
     return false;
