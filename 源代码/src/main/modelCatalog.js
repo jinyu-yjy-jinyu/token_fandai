@@ -53,7 +53,6 @@ class ModelCatalog {
         this.writeCache(bySite);
         return bySite;
       } catch (e) {
-        this.cache = null;
         throw e;
       } finally {
         this.loading = null;
