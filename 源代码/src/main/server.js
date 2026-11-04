@@ -34,8 +34,12 @@ class LocalServer {
   }
 
   stop() {
-    if (this.server) this.server.close();
+    const s = this.server;
     this.server = null;
+    return new Promise((resolve) => {
+      if (s) s.close(() => resolve());
+      else resolve();
+    });
   }
 
   setCors(res) {

@@ -29,7 +29,7 @@ function createWindow() {
 }
 
 async function startServer(port) {
-  if (server) server.stop();
+  if (server) await server.stop();
   server = new LocalServer();
   if (port) server.setPort(port);
   await server.start();
@@ -164,7 +164,7 @@ ipcMain.handle('token:clear', async (e, adapterId) => {
 ipcMain.handle('server:getInfo', async () => {
   return {
     port: server ? server.port : 0,
-    running: !!server,
+    running: !!(server && server.server),
   };
 });
 
