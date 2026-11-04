@@ -227,6 +227,7 @@ class LocalServer {
     let content = '';
     const lines = raw.split(/\r?\n/);
     for (const line of lines) {
+      if (typeof adapter.parseChunk !== 'function') break;
       const r = adapter.parseChunk(line, model);
       if (!r) continue;
       if (r.done) break;
