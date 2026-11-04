@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'" />
+  <title>反代token</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>反代token</h1>
+    <div class="server-status" id="serverStatus">
+      <span class="dot" id="serverDot"></span>
+      <span id="serverText">本地服务启动中...</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>AI 站点管理</h2>
+      <div class="model-bar">
+        <span id="modelSource" class="model-source">模型列表加载中...</span>
+        <button id="refreshModelsBtn">刷新模型</button>
+      </div>
+      <div id="adapterList" class="adapter-list"></div>
+    </section>
+
+    <section class="card">
+      <h2>本地 API 接口</h2>
+      <p class="tip">把下面的地址填入支持 OpenAI 接口的客户端（如 Cherry Studio、ChatBox 等）即可使用。</p>
+      <div class="api-url">
+        <code id="apiUrl">http://127.0.0.1:8349/v1</code>
+        <button id="copyUrl">复制</button>
+      </div>
+      <div class="port-row">
+        <label>端口</label>
+        <input type="number" id="portInput" value="8349" min="1" max="65535" />
+        <button id="restartBtn">重启服务</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>接口测试</h2>
+      <div class="test-row">
+        <select id="testSite"></select>
+        <input type="text" id="testMessage" placeholder="输入测试消息，如：你好" />
+        <button id="testBtn">发送</button>
+      </div>
+      <pre id="testResult" class="test-result">测试结果将显示在这里</pre>
+    </section>
+  </main>
+
+  <div id="loginModal" class="modal hidden">
+    <div class="modal-content">
+      <p id="loginModalHint">正在打开浏览器窗口登录，登录成功后会自动抓取 token 并关闭窗口。</p>
+      <p class="tip">如果已登录但窗口没有自动关闭，请点击下方按钮立即拉取。</p>
+      <div class="modal-actions">
+        <button id="grabNowBtn" class="primary">我已登录 · 立即拉取</button>
+        <button id="cancelLogin" class="secondary">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modelsModal" class="modal hidden">
+    <div class="modal-content wide">
+      <h3 id="modelsModalTitle">模型列表</h3>
+      <pre id="modelsModalBody" class="models-list"></pre>
+      <button id="closeModelsModal">关闭</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
