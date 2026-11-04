@@ -122,15 +122,26 @@ module.exports = {
     const { name, value } = await buildPowHeader(challenge, '/api/v0/chat/completion');
     headers[name] = value;
 
-    const modelType = 'default';
+    const normalizeContent = (c) => {
+      if (typeof c === 'string') return c;
+      if (Array.isArray(c)) return c.map((x) => (x && x.text) || (typeof x === 'string' ? x : '')).join('');
+      if (c && typeof c === 'object') return String(c.content || c.text || '');
+      return c == null ? '' : String(c);
+    };
+
+    const thinkingEnabled = /reasoner/i.test(model || '');
+
     const lastUser = [...messages].reverse().find((m) => m.role === 'user');
+    const prompt = messages.length > 1
+      ? messages.map((m) => `${m.role}: ${normalizeContent(m.content)}`).join('\n')
+      : (lastUser ? normalizeContent(lastUser.content) : '');
     const body = {
       chat_session_id: chatSessionId,
       parent_message_id: null,
-      model_type: modelType,
-      prompt: lastUser ? lastUser.content : '',
+      model_type: 'default',
+      prompt,
       ref_file_ids: [],
-      thinking_enabled: false,
+      thinking_enabled: thinkingEnabled,
       search_enabled: false,
       action: null,
       preempt: false,
@@ -279,6 +290,7 @@ module.exports = {
       this.handleSSELine(state, state.buffer, model, emit);
       state.buffer = '';
     }
+    this.handleSSELine(state, '', model, emit);
   },
 
   handleSSELine(state, line, model, emit) {
