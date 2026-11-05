@@ -1,12 +1,10 @@
 const deepseek = require('./deepseek');
 const kimi = require('./kimi');
 const zhipu = require('./zhipu');
-const zai = require('./zai');
-const tongyi = require('./tongyi');
 const doubao = require('./doubao');
 const yiyan = require('./yiyan');
 
-const ALL = [deepseek, kimi, zhipu, zai, tongyi, doubao, yiyan];
+const ALL = [deepseek, kimi, zhipu, doubao, yiyan];
 
 class AdapterRegistry {
   constructor() {
