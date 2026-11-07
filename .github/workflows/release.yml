@@ -24,7 +24,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # On workflow_dispatch we target the chosen existing tag
           ref: ${{ github.event.inputs.tag || github.ref }}
 
       - uses: actions/setup-node@v4
@@ -35,7 +34,12 @@ jobs:
         working-directory: 源代码
         run: npm ci
 
-      # ADJUST 1: build commands if your package.json scripts differ
+      - name: Inject tag version into package.json
+        working-directory: 源代码
+        env:
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: npm version --no-git-tag-version "${TAG#v}"
+
       - name: Build Windows installer
         if: runner.os == 'Windows'
         working-directory: 源代码
@@ -51,7 +55,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer
-          # ADJUST 2: output path if electron-builder output dir differs
           path: output/安装包/*.exe
           retention-days: 14
 
@@ -72,11 +75,16 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: Attach assets to the tag
+      - name: Create or update release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          files: artifacts/**/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Replace assets on the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: gh release upload "$TAG" artifacts/**/* --clobber
