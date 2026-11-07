@@ -38,6 +38,7 @@ jobs:
         working-directory: 源代码
         env:
           TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        shell: bash
         run: npm version --no-git-tag-version "${TAG#v}"
 
       - name: Build Windows installer
@@ -84,3 +85,4 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
