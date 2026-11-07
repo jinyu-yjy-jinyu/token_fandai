@@ -123,7 +123,7 @@ ipcMain.handle('login:start', async (e, adapterId) => {
   const keepOpen = !!(adapter && adapter.keepWindowOpen);
   if (keepOpen) {
     grabber.grab(adapterId).catch(() => {});
-    return { ok: true, keepOpen: true, message: '已打开登录窗口，请在窗口内登录；若抓到 token 且需要完成网页验证码对话，完成后点击【我已登录 · 立即拉取】确认' };
+    return { ok: true, keepOpen: true, message: '正在打开默认浏览器，请登录后重试；若抓到 token 且需要完成网页验证码对话，完成后点击【我已登录 · 立即拉取】确认' };
   }
   const tokens = await grabber.grab(adapterId);
   store.setToken(adapterId, tokens);
@@ -211,5 +211,9 @@ ipcMain.handle('test:chat', async (e, adapterId, message) => {
 });
 
 ipcMain.handle('open:external', (e, url) => {
+  if (typeof url !== 'string' || !/^https?:\/\//i.test(url)) {
+    return { ok: false, message: 'invalid url' };
+  }
   shell.openExternal(url);
+  return { ok: true };
 });

@@ -3,6 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const store = require('./utils/store');
 
 const BLOCKED_HOSTS = /(facebook|doubleclick|googletagmanager|google-analytics|fullstory|sentry|hotjar|cdnjs|fontawesome|mixpanel|segment|amplitude|branch\.io|scorecardresearch|taboola|outbrain)/i;
 
@@ -85,6 +86,7 @@ class TokenGrabber {
     this.port = null;
     this.external = false;
     this.userDataDir = path.join(os.tmpdir(), 'fandai-chrome-profile');
+    this._launched = false;
   }
 
   async ensureBrowser() {
@@ -95,6 +97,7 @@ class TokenGrabber {
         if (info && info.webSocketDebuggerUrl) {
           this.port = p;
           this.external = true;
+          this._launched = false;
           this.cdp = new CdpClient(info.webSocketDebuggerUrl);
           await this.cdp.ready;
           return;
@@ -111,6 +114,7 @@ class TokenGrabber {
       '--no-first-run',
       '--no-default-browser-check',
     ], { detached: false, stdio: 'ignore' });
+    this._launched = true;
     for (let i = 0; i < 50; i++) {
       try {
         const info = await httpGetJson(`http://127.0.0.1:${this.port}/json/version`);
@@ -183,6 +187,12 @@ class TokenGrabber {
     const adapter = this.adapters.get(adapterId);
     if (!adapter) throw new Error(`未知站点: ${adapterId}`);
 
+    const tokens = store.getTokens();
+    const existing = tokens && tokens[adapterId];
+    if (existing && typeof adapter.isTokenValid === 'function' && adapter.isTokenValid(existing)) {
+      return existing;
+    }
+
     await this.ensureBrowser();
 
     const keepOpen = !!adapter.keepWindowOpen;
@@ -234,6 +244,14 @@ class TokenGrabber {
 
   async grabNow(adapterId) {
     const adapter = this.adapters.get(adapterId);
+    if (!adapter) throw new Error(`未知站点: ${adapterId}`);
+
+    const tokens = store.getTokens();
+    const existing = tokens && tokens[adapterId];
+    if (existing && typeof adapter.isTokenValid === 'function' && adapter.isTokenValid(existing)) {
+      return { ok: true, tokens: existing, confirmed: true };
+    }
+
     if (!this.cdp) throw new Error('浏览器未启动');
     // find an attached tab by creating? We need track tab. Use last created tab target.
     // We'll search targets for a page with adapter login url.
