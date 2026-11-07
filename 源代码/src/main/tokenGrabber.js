@@ -12,6 +12,10 @@ function findBrowser() {
     path.join(process.env['PROGRAMFILES'] || 'C:\\Program Files', 'Google', 'Chrome', 'Application', 'chrome.exe'),
     path.join(process.env['PROGRAMFILES(X86)'] || 'C:\\Program Files (x86)', 'Google', 'Chrome', 'Application', 'chrome.exe'),
     path.join(process.env['LOCALAPPDATA'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    path.join(os.homedir(), 'Applications', 'Google Chrome.app', 'Contents', 'MacOS', 'Google Chrome'),
+    '/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge',
+    path.join(os.homedir(), 'Applications', 'Microsoft Edge.app', 'Contents', 'MacOS', 'Microsoft Edge'),
     path.join(process.env['PROGRAMFILES'] || 'C:\\Program Files', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
     path.join(process.env['PROGRAMFILES(X86)'] || 'C:\\Program Files (x86)', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
   ];
@@ -85,8 +89,7 @@ class TokenGrabber {
     this.cdp = null;
     this.port = null;
     this.external = false;
-    this.userDataDir = path.join(os.tmpdir(), 'fandai-chrome-profile');
-    this._launched = false;
+    this.userDataDir = path.join(os.homedir(), '.fandai-chrome-profile');
   }
 
   async ensureBrowser() {
@@ -96,8 +99,7 @@ class TokenGrabber {
         const info = await httpGetJson(`http://127.0.0.1:${p}/json/version`);
         if (info && info.webSocketDebuggerUrl) {
           this.port = p;
-          this.external = true;
-          this._launched = false;
+          this.external = true;?
           this.cdp = new CdpClient(info.webSocketDebuggerUrl);
           await this.cdp.ready;
           return;
@@ -114,7 +116,6 @@ class TokenGrabber {
       '--no-first-run',
       '--no-default-browser-check',
     ], { detached: false, stdio: 'ignore' });
-    this._launched = true;
     for (let i = 0; i < 50; i++) {
       try {
         const info = await httpGetJson(`http://127.0.0.1:${this.port}/json/version`);
@@ -305,3 +306,4 @@ class TokenGrabber {
 }
 
 module.exports = TokenGrabber;
+

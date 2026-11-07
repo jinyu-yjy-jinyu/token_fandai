@@ -120,6 +120,11 @@ ipcMain.handle('models:refresh', async () => {
 
 ipcMain.handle('login:start', async (e, adapterId) => {
   const adapter = adapters.get(adapterId);
+  const tokens = store.getTokens();
+  const existing = tokens && tokens[adapterId];
+  if (existing && typeof adapter.isTokenValid === 'function' && adapter.isTokenValid(existing)) {
+    return { ok: true, reused: true };
+  }
   const keepOpen = !!(adapter && adapter.keepWindowOpen);
   if (keepOpen) {
     grabber.grab(adapterId).catch(() => {});
@@ -217,3 +222,4 @@ ipcMain.handle('open:external', (e, url) => {
   shell.openExternal(url);
   return { ok: true };
 });
+

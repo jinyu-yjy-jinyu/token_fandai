@@ -36,7 +36,7 @@
         }
       ],
       "icon": "build/icon.ico",
-      "artifactName": "反代token-${version}-Windows.exe"
+      "artifactName": "token-${version}-Windows.exe"
     },
     "nsis": {
       "oneClick": false,
@@ -56,7 +56,7 @@
       ],
       "icon": "build/icon.png",
       "category": "public.app-category.utilities",
-      "artifactName": "反代token-${version}-MacOS.dmg"
+      "artifactName": "token-${version}-MacOS.dmg"
     },
     "dmg": {
       "contents": [
@@ -80,3 +80,4 @@
     "electron@33.4.11": true
   }
 }
+

@@ -93,7 +93,13 @@ async function startLogin(a) {
   loggingInAdapterId = a.id;
   let r;
   try {
-    r = await window.api.startLogin(a.id);
+    const r = await window.api.startLogin(a.id);
+    if (r && r.reused) {
+      $('#loginModal').classList.add('hidden');
+      loggingInAdapterId = null;
+      refresh();
+      return;
+    }
     if (r.keepOpen) {
       $('#loginModalHint').textContent = r.message || '请在弹出的窗口内完成登录；若站点需要验证码对话，请在窗口内发一条消息完成验证，然后点击下方按钮确认抓取。';
       return;
