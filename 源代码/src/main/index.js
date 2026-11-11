@@ -120,8 +120,8 @@ ipcMain.handle('models:refresh', async () => {
 
 ipcMain.handle('login:start', async (e, adapterId) => {
   const adapter = adapters.get(adapterId);
-  const tokens = store.getTokens();
-  const existing = tokens && tokens[adapterId];
+  const stored = store.getTokens();
+  const existing = stored && stored[adapterId];
   if (existing && typeof adapter.isTokenValid === 'function' && adapter.isTokenValid(existing)) {
     return { ok: true, reused: true };
   }
@@ -130,13 +130,13 @@ ipcMain.handle('login:start', async (e, adapterId) => {
     grabber.grab(adapterId).catch(() => {});
     return { ok: true, keepOpen: true, message: '正在打开默认浏览器，请登录后重试；若抓到 token 且需要完成网页验证码对话，完成后点击【我已登录 · 立即拉取】确认' };
   }
-  tokens = await grabber.grab(adapterId);
-  store.setToken(adapterId, tokens);
+  const grabbed = await grabber.grab(adapterId);
+  store.setToken(adapterId, grabbed);
   return {
     ok: true,
-    tokens: Object.keys(tokens)
+    tokens: Object.keys(grabbed)
       .filter((k) => !k.startsWith('__'))
-      .reduce((o, k) => ((o[k] = tokens[k]), o), {}),
+      .reduce((o, k) => ((o[k] = grabbed[k]), o), {}),
   };
 });
 

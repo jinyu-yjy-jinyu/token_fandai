@@ -2,21 +2,26 @@ const fs = require('fs');
 const path = require('path');
 
 let storePath = null;
+let cache = null; // 内存缓存，避免每次读磁盘
 
 function init(userDataDir) {
   storePath = path.join(userDataDir, 'tokens.json');
+  cache = null; // 重置缓存，下次 getTokens 会重新读盘
 }
 
 function read() {
+  if (cache) return cache;
   try {
     if (!storePath) return {};
-    return JSON.parse(fs.readFileSync(storePath, 'utf8'));
+    cache = JSON.parse(fs.readFileSync(storePath, 'utf8'));
+    return cache;
   } catch (e) {
     return {};
   }
 }
 
 function write(data) {
+  cache = data; // 更新内存缓存
   try {
     if (!storePath) return;
     fs.writeFileSync(storePath, JSON.stringify(data, null, 2), 'utf8');

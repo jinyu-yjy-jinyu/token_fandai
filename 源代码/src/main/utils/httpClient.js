@@ -35,8 +35,13 @@ function request(options, bodyBuffer, onChunk, signal) {
           return;
         }
         if (onChunk) {
+          const chunks = [];
           res.on('data', (chunk) => {
+            chunks.push(chunk);
             if (onChunk) onChunk(chunk, { statusCode: res.statusCode });
+          });
+          res.on('end', () => {
+            resolve({ statusCode: res.statusCode, headers: res.headers, body: Buffer.concat(chunks) });
           });
         } else {
           const chunks = [];
@@ -49,9 +54,6 @@ function request(options, bodyBuffer, onChunk, signal) {
             });
           });
         }
-        res.on('end', () => {
-          if (onChunk) resolve({ statusCode: res.statusCode, headers: res.headers });
-        });
         res.on('error', (e) => reject(e));
       }
     );

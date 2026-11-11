@@ -253,7 +253,7 @@ class TokenGrabber {
       return { ok: true, tokens: existing, confirmed: true };
     }
 
-    if (!this.cdp) throw new Error('浏览器未启动');
+    await this.ensureBrowser();
     // find an attached tab by creating? We need track tab. Use last created tab target.
     // We'll search targets for a page with adapter login url.
     const targets = await this.cdp.send('Target.getTargets');
@@ -279,6 +279,13 @@ class TokenGrabber {
     if (this.cdp) {
       this.cdp.close();
       this.cdp = null;
+    }
+    // Reject any keepOpen pending grab promise so it does not hang forever
+    if (this._pendingReject) {
+      try { this._pendingReject(new Error('已取消')); } catch (e) {}
+      this._pendingResolve = null;
+      this._pendingReject = null;
+      this._pendingTab = null;
     }
   }
 

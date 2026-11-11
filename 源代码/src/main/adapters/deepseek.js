@@ -254,22 +254,29 @@ module.exports = {
     };
 
     const errChunks = [];
+    let upstreamStatus = 0;
     const rawRes = await request(
       { url, method, headers },
       JSON.stringify(body),
-      (chunk) => {
-        errChunks.push(chunk);
+      (chunk, meta) => {
+        if (meta && meta.statusCode) upstreamStatus = meta.statusCode;
+        if (upstreamStatus >= 400) {
+          errChunks.push(chunk);
+          return;
+        }
         const text = chunk.toString('utf8');
         this.feedSSE(state, text, model, emit);
       }
     );
 
-    if (rawRes.statusCode >= 400) {
+    if (upstreamStatus >= 400) {
       let detail = '';
       if (errChunks.length) {
         detail = Buffer.concat(errChunks).toString('utf8').slice(0, 500);
       }
-      emit(openaiChunk({ model, delta: { content: `[上游错误 ${rawRes.statusCode}] ${detail}`, finish: 'stop' } }));
+      emit(openaiChunk({ model, delta: { content: `[上游错误 ${upstreamStatus}] ${detail}`, finish: 'stop' } }));
+      emit({ done: true });
+      return;
     }
     this.flushSSE(state, model, emit);
     emit({ done: true });
