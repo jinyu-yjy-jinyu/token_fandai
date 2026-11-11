@@ -130,7 +130,7 @@ ipcMain.handle('login:start', async (e, adapterId) => {
     grabber.grab(adapterId).catch(() => {});
     return { ok: true, keepOpen: true, message: '正在打开默认浏览器，请登录后重试；若抓到 token 且需要完成网页验证码对话，完成后点击【我已登录 · 立即拉取】确认' };
   }
-  const tokens = await grabber.grab(adapterId);
+  tokens = await grabber.grab(adapterId);
   store.setToken(adapterId, tokens);
   return {
     ok: true,

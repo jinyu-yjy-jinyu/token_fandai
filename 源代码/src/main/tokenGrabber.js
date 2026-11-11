@@ -99,7 +99,7 @@ class TokenGrabber {
         const info = await httpGetJson(`http://127.0.0.1:${p}/json/version`);
         if (info && info.webSocketDebuggerUrl) {
           this.port = p;
-          this.external = true;?
+          this.external = true;
           this.cdp = new CdpClient(info.webSocketDebuggerUrl);
           await this.cdp.ready;
           return;
@@ -263,10 +263,10 @@ class TokenGrabber {
     const sessionId = attach.sessionId;
     await this.cdp.send('Network.enable', {}, sessionId);
     await this.cdp.send('Runtime.enable', {}, sessionId);
-    const tokens = await this.extractFromTab(sessionId, adapter);
-    if (adapter.isTokenValid(tokens)) {
+    const extracted = await this.extractFromTab(sessionId, adapter);
+    if (adapter.isTokenValid(extracted)) {
       await this.closeTab(page.targetId);
-      return { ok: true, tokens, confirmed: true };
+      return { ok: true, tokens: extracted, confirmed: true };
     }
     return { ok: false, message: '尚未检测到登录状态，请确认已登录后重试' };
   }
